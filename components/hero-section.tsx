@@ -1,11 +1,15 @@
 import { Button } from "@/components/ui/button"
 import { BananaIcon } from "@/components/banana-icon"
+import { Navigation } from "@/components/navigation"
 
 export function HeroSection() {
   return (
     <section className="relative overflow-hidden bg-background">
+      {/* Navigation */}
+      <Navigation />
+
       {/* Decorative banana elements */}
-      <div className="absolute top-10 right-20 opacity-20 rotate-12 hidden lg:block">
+      <div className="absolute top-32 right-20 opacity-20 rotate-12 hidden lg:block">
         <BananaIcon className="w-32 h-32 text-accent" />
       </div>
       <div className="absolute bottom-20 left-10 opacity-10 -rotate-45 hidden lg:block">
@@ -14,20 +18,6 @@ export function HeroSection() {
       <div className="absolute top-1/2 right-1/3 opacity-5 rotate-90 hidden lg:block">
         <BananaIcon className="w-64 h-64 text-accent" />
       </div>
-
-      {/* Header */}
-      <header className="container mx-auto px-4 py-6">
-        <nav className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <BananaIcon className="w-8 h-8 text-accent" />
-            <span className="text-2xl font-bold text-foreground">Nano Banana</span>
-          </div>
-          <div className="flex items-center gap-4">
-            <Button variant="ghost">View Examples</Button>
-            <Button>Start Editing</Button>
-          </div>
-        </nav>
-      </header>
 
       {/* Announcement Banner */}
       <div className="container mx-auto px-4 py-3">

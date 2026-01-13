@@ -39,7 +39,7 @@ export default function RootLayout({
   return (
     // Add suppressHydrationWarning to prevent extension-injected attributes from causing client/server mismatch.
     <html lang="en" suppressHydrationWarning>
-      <body className={`font-sans antialiased`}>
+      <body className={`font-sans antialiased`} suppressHydrationWarning>
         {children}
         <Analytics />
       </body>
