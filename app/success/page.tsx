@@ -5,8 +5,9 @@ import { CheckCircle, ArrowRight } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import Link from 'next/link'
+import { Suspense } from 'react'
 
-export default function SuccessPage() {
+function SuccessContent() {
   const searchParams = useSearchParams()
   const checkoutId = searchParams.get('checkout_id')
   const orderId = searchParams.get('order_id')
@@ -72,5 +73,21 @@ export default function SuccessPage() {
         </CardContent>
       </Card>
     </div>
+  )
+}
+
+export default function SuccessPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen flex items-center justify-center px-4">
+        <Card className="max-w-md w-full">
+          <CardContent className="pt-12 pb-8 px-8 text-center">
+            <div className="animate-pulse">Loading...</div>
+          </CardContent>
+        </Card>
+      </div>
+    }>
+      <SuccessContent />
+    </Suspense>
   )
 }

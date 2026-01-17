@@ -10,7 +10,8 @@
       "mcp__playwright__browser_take_screenshot",
       "Bash(tree:*)",
       "mcp__firecrawl__firecrawl_search",
-      "WebSearch"
+      "WebSearch",
+      "Bash(pnpm run build:*)"
     ]
   }
 }
