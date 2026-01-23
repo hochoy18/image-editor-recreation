@@ -36,7 +36,7 @@ export function Navigation() {
             Showcase
           </Link>
           <Link
-            href="/pricing"
+            href="/pricing-paypal"
             className="text-sm font-medium text-foreground/80 hover:text-foreground transition-colors"
           >
             Pricing

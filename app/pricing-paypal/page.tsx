@@ -1,7 +1,7 @@
 'use client'
 
-import { useState } from 'react'
-import { Check, Sparkles, Zap, Crown, Users } from 'lucide-react'
+import { useState, useEffect } from 'react'
+import { Check, Sparkles, Zap, Crown, Users, Loader2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
@@ -15,26 +15,11 @@ interface Plan {
   monthlyCredits: number
   imagesPerMonth: number
   features: string[]
-  monthlyPrice: string
-  yearlyPrice: string
+  monthlyPrice: number
+  yearlyPrice: number
   badge?: string
   popular?: boolean
   icon: React.ReactNode
-}
-
-const paypalLinks = {
-  basic: {
-    monthly: process.env.NEXT_PUBLIC_PAYPAL_BASIC_MONTHLY || 'https://www.paypal.com/ncp/payment/586RE6UMJ74UY',
-    yearly: process.env.NEXT_PUBLIC_PAYPAL_BASIC_YEARLY || 'https://www.paypal.com/ncp/payment/586RE6UMJ74UY',
-  },
-  pro: {
-    monthly: process.env.NEXT_PUBLIC_PAYPAL_PRO_MONTHLY || 'https://www.paypal.com/ncp/payment/586RE6UMJ74UY',
-    yearly: process.env.NEXT_PUBLIC_PAYPAL_PRO_YEARLY || 'https://www.paypal.com/ncp/payment/586RE6UMJ74UY',
-  },
-  max: {
-    monthly: process.env.NEXT_PUBLIC_PAYPAL_MAX_MONTHLY || 'https://www.paypal.com/ncp/payment/586RE6UMJ74UY',
-    yearly: process.env.NEXT_PUBLIC_PAYPAL_MAX_YEARLY || 'https://www.paypal.com/ncp/payment/586RE6UMJ74UY',
-  },
 }
 
 const plans: Plan[] = [
@@ -44,8 +29,8 @@ const plans: Plan[] = [
     description: 'Perfect for individuals and light users',
     monthlyCredits: 200,
     imagesPerMonth: 100,
-    monthlyPrice: '$9',
-    yearlyPrice: '$90',
+    monthlyPrice: 9,
+    yearlyPrice: 90,
     icon: <Sparkles className="w-5 h-5" />,
     features: [
       '100 high-quality images/month',
@@ -62,8 +47,8 @@ const plans: Plan[] = [
     description: 'For professional creators and teams',
     monthlyCredits: 800,
     imagesPerMonth: 400,
-    monthlyPrice: '$29',
-    yearlyPrice: '$290',
+    monthlyPrice: 29,
+    yearlyPrice: 290,
     badge: 'Most Popular',
     popular: true,
     icon: <Zap className="w-5 h-5" />,
@@ -86,8 +71,8 @@ const plans: Plan[] = [
     description: 'Designed for large enterprises and studios',
     monthlyCredits: 3600,
     imagesPerMonth: 1800,
-    monthlyPrice: '$99',
-    yearlyPrice: '$990',
+    monthlyPrice: 99,
+    yearlyPrice: 990,
     icon: <Crown className="w-5 h-5" />,
     features: [
       '1800 high-quality images/month',
@@ -119,12 +104,132 @@ const faqs = [
   },
   {
     question: 'What payment methods are supported?',
-    answer: 'We support credit cards, debit cards, Alipay, WeChat Pay, and various other payment methods. All payments are processed through secure third-party payment platforms.',
+    answer: 'We support PayPal, credit cards, debit cards, and various other payment methods. All payments are processed securely through PayPal.',
   },
 ]
 
-export default function PricingPage() {
+declare global {
+  interface Window {
+    paypal: any
+  }
+}
+
+export default function PricingPayPalPage() {
   const [billingPeriod, setBillingPeriod] = useState<BillingPeriod>('yearly')
+  const [paypalLoaded, setPaypalLoaded] = useState(false)
+  const [paypalLoading, setPaypalLoading] = useState(false)
+  const [paymentError, setPaymentError] = useState<string | null>(null)
+
+  const clientId = process.env.NEXT_PUBLIC_PAYPAL_CLIENT_ID || 'test'
+
+  // Load PayPal SDK
+  useEffect(() => {
+    const loadPayPalScript = () => {
+      if (window.paypal) {
+        setPaypalLoaded(true)
+        return
+      }
+
+      const script = document.createElement('script')
+      script.src = `https://www.paypal.com/sdk/js?client-id=${clientId}&currency=USD`
+      script.addEventListener('load', () => {
+        setPaypalLoaded(true)
+      })
+      script.addEventListener('error', () => {
+        console.error('Failed to load PayPal SDK')
+        setPaymentError('Failed to load PayPal payment. Please try again later.')
+      })
+      document.body.appendChild(script)
+
+      return () => {
+        document.body.removeChild(script)
+      }
+    }
+
+    loadPayPalScript()
+  }, [clientId])
+
+  // Initialize PayPal buttons for each plan
+  useEffect(() => {
+    if (!paypalLoaded || !window.paypal) return
+
+    const renderPayPalButtons = () => {
+      plans.forEach((plan) => {
+        const containerId = `paypal-button-container-${plan.id}`
+        const container = document.getElementById(containerId)
+
+        if (container) {
+          container.innerHTML = ''
+
+          const price = billingPeriod === 'monthly' ? plan.monthlyPrice : plan.yearlyPrice
+          const period = billingPeriod === 'monthly' ? 'Monthly' : 'Yearly'
+
+          window.paypal
+            .Buttons({
+              style: {
+                layout: 'vertical',
+                color: plan.popular ? 'gold' : 'blue',
+                shape: 'rect',
+                label: 'paypal',
+              },
+              createOrder: (data: any, actions: any) => {
+                return actions.order.create({
+                  purchase_units: [
+                    {
+                      description: `${plan.name} Plan - ${period}`,
+                      custom_id: `${plan.id}_${billingPeriod}`,
+                      amount: {
+                        value: price.toFixed(2),
+                      },
+                    },
+                  ],
+                })
+              },
+              onApprove: (data: any, actions: any) => {
+                setPaypalLoading(true)
+                return actions.order.capture().then((details: any) => {
+                  console.log('Payment successful:', details)
+                  // Redirect to success page with payment details
+                  const params = new URLSearchParams({
+                    payment_id: details.id,
+                    order_id: details.purchase_units[0]?.payments?.captures?.[0]?.id || '',
+                    payer_id: details.payer.payer_id,
+                    status: details.status,
+                    plan: plan.id,
+                    billing_period: billingPeriod,
+                  })
+                  window.location.href = `/success?${params.toString()}`
+                  setPaypalLoading(false)
+                })
+              },
+              onError: (err: any) => {
+                console.error('PayPal error:', err)
+                setPaymentError('Payment failed. Please try again or contact support.')
+                setPaypalLoading(false)
+              },
+              onCancel: (data: any) => {
+                console.log('Payment cancelled:', data)
+                setPaypalLoading(false)
+              },
+            })
+            .render(container)
+            .catch((err: any) => {
+              console.error('PayPal button render error:', err)
+            })
+        }
+      })
+    }
+
+    // Use requestAnimationFrame to ensure DOM is ready
+    requestAnimationFrame(() => {
+      renderPayPalButtons()
+    })
+
+    // Re-render when billing period changes
+    return () => {
+      // Cleanup handled by clearing innerHTML
+    }
+  }, [paypalLoaded, billingPeriod])
 
   return (
     <div className="min-h-screen">
@@ -165,15 +270,30 @@ export default function PricingPage() {
           </button>
         </div>
 
+        {/* Payment Error */}
+        {paymentError && (
+          <div className="mb-8 max-w-2xl mx-auto p-4 bg-destructive/10 border border-destructive/20 rounded-lg">
+            <p className="text-destructive text-sm">{paymentError}</p>
+          </div>
+        )}
+
+        {/* Loading overlay */}
+        {paypalLoading && (
+          <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+            <div className="bg-background p-8 rounded-lg flex items-center gap-4">
+              <Loader2 className="w-8 h-8 animate-spin text-primary" />
+              <p className="text-lg">Processing payment...</p>
+            </div>
+          </div>
+        )}
+
         {/* Pricing Cards */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-16 max-w-6xl mx-auto">
           {plans.map((plan) => (
             <Card
               key={plan.id}
               className={`relative ${
-                plan.popular
-                  ? 'border-primary shadow-lg scale-105'
-                  : 'border-border'
+                plan.popular ? 'border-primary shadow-lg scale-105' : 'border-border'
               }`}
             >
               {plan.badge && (
@@ -192,7 +312,7 @@ export default function PricingPage() {
                 <div className="mb-6">
                   <div className="flex items-baseline gap-1">
                     <span className="text-4xl font-bold">
-                      {billingPeriod === 'monthly' ? plan.monthlyPrice : plan.yearlyPrice}
+                      ${billingPeriod === 'monthly' ? plan.monthlyPrice : plan.yearlyPrice}
                     </span>
                     <span className="text-muted-foreground">/{billingPeriod}</span>
                   </div>
@@ -210,22 +330,14 @@ export default function PricingPage() {
                   ))}
                 </ul>
 
-                <a
-                  href={
-                    billingPeriod === 'monthly'
-                      ? paypalLinks[plan.id as keyof typeof paypalLinks].monthly
-                      : paypalLinks[plan.id as keyof typeof paypalLinks].yearly
-                  }
-                  target="_blank"
-                  rel="noopener noreferrer"
-                >
-                  <Button
-                    className="w-full"
-                    variant={plan.popular ? 'default' : 'outline'}
-                  >
-                    Get Started
-                  </Button>
-                </a>
+                {/* PayPal Button Container */}
+                <div id={`paypal-button-container-${plan.id}`} className="w-full min-h-[45px]">
+                  {!paypalLoaded && (
+                    <div className="flex items-center justify-center w-full min-h-[45px]">
+                      <Loader2 className="w-5 h-5 animate-spin text-muted-foreground" />
+                    </div>
+                  )}
+                </div>
               </CardContent>
             </Card>
           ))}

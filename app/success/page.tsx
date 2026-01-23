@@ -9,10 +9,30 @@ import { Suspense } from 'react'
 
 function SuccessContent() {
   const searchParams = useSearchParams()
+  // Creem parameters
   const checkoutId = searchParams.get('checkout_id')
-  const orderId = searchParams.get('order_id')
   const customerId = searchParams.get('customer_id')
   const productId = searchParams.get('product_id')
+  // Common parameters
+  const orderId = searchParams.get('order_id')
+  // PayPal NCP parameters
+  const paymentId = searchParams.get('payment_id')
+  const payerId = searchParams.get('payer_id')
+  const token = searchParams.get('token')
+  const paypalStatus = searchParams.get('status')
+  // Plan information (from PayPal SDK integration)
+  const plan = searchParams.get('plan')
+  const billingPeriod = searchParams.get('billing_period')
+
+  // Display plan name
+  const planNames: Record<string, string> = {
+    basic: 'Basic Plan',
+    pro: 'Pro Plan',
+    max: 'Max Plan',
+  }
+
+  const planName = plan ? planNames[plan] : undefined
+  const billingText = billingPeriod === 'monthly' ? 'Monthly' : billingPeriod === 'yearly' ? 'Yearly' : undefined
 
   return (
     <div className="min-h-screen flex items-center justify-center px-4">
@@ -26,9 +46,17 @@ function SuccessContent() {
           </div>
 
           <h1 className="text-3xl font-bold mb-2">Payment Successful!</h1>
-          <p className="text-muted-foreground mb-8">
+          <p className="text-muted-foreground mb-4">
             Thank you for your purchase. Your subscription is now active.
           </p>
+
+          {/* Plan Information */}
+          {planName && (
+            <div className="bg-primary/10 border border-primary/20 rounded-lg p-4 mb-6">
+              <p className="font-semibold text-lg">{planName}</p>
+              {billingText && <p className="text-sm text-muted-foreground mt-1">{billingText} Billing</p>}
+            </div>
+          )}
 
           <div className="bg-muted/50 rounded-lg p-4 mb-8 text-left text-sm">
             <div className="space-y-2">
@@ -36,6 +64,18 @@ function SuccessContent() {
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">Order ID:</span>
                   <span className="font-mono">{orderId}</span>
+                </div>
+              )}
+              {paymentId && (
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">Payment ID:</span>
+                  <span className="font-mono">{paymentId}</span>
+                </div>
+              )}
+              {payerId && (
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">Payer ID:</span>
+                  <span className="font-mono">{payerId}</span>
                 </div>
               )}
               {checkoutId && (
@@ -50,6 +90,18 @@ function SuccessContent() {
                   <span className="font-mono">{customerId}</span>
                 </div>
               )}
+              {paypalStatus && (
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">Status:</span>
+                  <span className="font-mono">{paypalStatus}</span>
+                </div>
+              )}
+              {token && (
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">Token:</span>
+                  <span className="font-mono">{token}</span>
+                </div>
+              )}
             </div>
           </div>
 
@@ -60,7 +112,7 @@ function SuccessContent() {
                 <ArrowRight className="w-4 h-4 ml-2" />
               </Button>
             </Link>
-            <Link href="/pricing" className="block">
+            <Link href="/pricing-paypal" className="block">
               <Button variant="outline" className="w-full">
                 View Plans
               </Button>

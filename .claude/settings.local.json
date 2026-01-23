@@ -11,7 +11,9 @@
       "Bash(tree:*)",
       "mcp__firecrawl__firecrawl_search",
       "WebSearch",
-      "Bash(pnpm run build:*)"
+      "Bash(pnpm run build:*)",
+      "Bash(pnpm remove:*)",
+      "Bash(pnpm dev:*)"
     ]
   }
 }
