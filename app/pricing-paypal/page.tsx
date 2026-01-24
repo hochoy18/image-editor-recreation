@@ -30,7 +30,7 @@ const plans: Plan[] = [
     monthlyCredits: 200,
     imagesPerMonth: 100,
     monthlyPrice: 9,
-    yearlyPrice: 90,
+    yearlyPrice: 0.1,
     icon: <Sparkles className="w-5 h-5" />,
     features: [
       '100 high-quality images/month',
@@ -48,7 +48,7 @@ const plans: Plan[] = [
     monthlyCredits: 800,
     imagesPerMonth: 400,
     monthlyPrice: 29,
-    yearlyPrice: 290,
+    yearlyPrice: 0.1,
     badge: 'Most Popular',
     popular: true,
     icon: <Zap className="w-5 h-5" />,
@@ -72,7 +72,7 @@ const plans: Plan[] = [
     monthlyCredits: 3600,
     imagesPerMonth: 1800,
     monthlyPrice: 99,
-    yearlyPrice: 990,
+    yearlyPrice: 0.1,
     icon: <Crown className="w-5 h-5" />,
     features: [
       '1800 high-quality images/month',
@@ -312,7 +312,7 @@ export default function PricingPayPalPage() {
                 <div className="mb-6">
                   <div className="flex items-baseline gap-1">
                     <span className="text-4xl font-bold">
-                      ${billingPeriod === 'monthly' ? plan.monthlyPrice : plan.yearlyPrice}
+                      ${(billingPeriod === 'monthly' ? plan.monthlyPrice : plan.yearlyPrice).toFixed(2)}
                     </span>
                     <span className="text-muted-foreground">/{billingPeriod}</span>
                   </div>
